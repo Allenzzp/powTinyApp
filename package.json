@@ -1,0 +1,26 @@
+{
+  "name": "powtinyapp",
+  "version": "1.0.0",
+  "description": "A more powerful version of tinyApp",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Allenzzp/powTinyApp.git"
+  },
+  "keywords": [
+    "LHL",
+    "URL-shorten"
+  ],
+  "author": "Allen Zhao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Allenzzp/powTinyApp/issues"
+  },
+  "homepage": "https://github.com/Allenzzp/powTinyApp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
