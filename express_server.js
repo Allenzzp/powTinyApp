@@ -73,14 +73,6 @@ const findUserByemail = (email, users) => {
   }
   return false;
 };
-const findUserById = (userId, users) => {
-  for (const id in users) {
-    if (id === userId) {
-      return users[id];
-    }
-  }
-  return null;
-};
 const getTimeStamp = () => {
   const date = new Date();
   const [month, day, year]       = [date.getMonth(), date.getDate(), date.getFullYear()];
@@ -95,7 +87,7 @@ const urlsForUser = (id, urls) => {
   }
   return filteredUrls;
 };
-
+////////////////////////////////////////////////
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}!`);
@@ -103,17 +95,13 @@ app.listen(PORT, () => {
 
 //Handle GET request
 app.get("/", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
-  if (!user) {
-    return res.redirect("/login");
-  }
   return res.redirect("/urls");
 });
 
 app.get("/urls", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId];
   if (!user) {
-    return res.status(401).send("<h1>You need to login first!</h1>");
+    return res.redirect("/login");
   }
   const userURLs = urlsForUser(user.userId, urlsDB);
   const templateVars = {
@@ -124,7 +112,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId];
   if (!user) {
     return res.redirect("/login");
   }
@@ -135,7 +123,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId];
   const shortURL = req.params.shortURL;
   if (!user) {
     return res.status(401).send("<h1>You need to login first!</h1>");
@@ -166,7 +154,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId];
   if (user) {
     return res.redirect("/urls");
   }
@@ -177,7 +165,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId, usersDB];
   if (user) {
     return res.redirect("/urls");
   }
@@ -189,9 +177,9 @@ app.get("/login", (req, res) => {
 
 //end point of create new URL obj
 app.post("/urls", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId];
   if (!user) {
-    return res.status(401).send("<h1>You need to login first!</h1>");
+    return res.redirect("/login");
   }
   const longURL = completeURL(req.body.longURL);
   const shortURL = generateRandomString();
@@ -207,10 +195,10 @@ app.post("/urls", (req, res) => {
 
 //end point of delete URL obj
 app.delete("/urls/:shortURL", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId];
   const shortURL = req.params.shortURL;
   if (!user) {
-    return res.status(401).send("<h1>You need to login first!</h1>");
+    return res.redirect("/login");
   }
   const urlObj = urlsDB[shortURL];
 
@@ -226,10 +214,10 @@ app.delete("/urls/:shortURL", (req, res) => {
 
 //end point of edit longURL
 app.put("/urls/:shortURL", (req, res) => {
-  const user = findUserById(req.session.userId, usersDB);
+  const user = usersDB[req.session.userId];
   const shortURL = req.params.shortURL;
   if (!user) {
-    return res.status(401).send("<h1>You need to login first!</h1>");
+    return res.redirect("/login");
   }
 
   const urlObj = urlsDB[shortURL];
@@ -246,8 +234,7 @@ app.put("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
+  const {email, password} = req.body;
   if (!email) {
     return res.status(400).send("<h1>Please enter your email address to login!</h1>");
   }
@@ -267,12 +254,12 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session.userId = null;
-  return res.redirect("urls");
+  return res.redirect("/urls");
 });
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
-  const password = bcrypt.hashSync(req.body.password, 10);
+  let password = req.body.password;
   if (!email) {
     return res.status(400).send("<h1>Please enter your email address to finish register!</h1>");
   }
@@ -283,6 +270,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("<h1>You already registered with this email address!</h1>");
   }
   const userId = generateRandomString();
+  password = bcrypt.hashSync(password, 10);
   usersDB[userId] = {
     userId,
     email,
