@@ -17,9 +17,15 @@ const urlsDB = {
   "9sm5xK": "http://www.google.com"
 };
 const usersDB = {
-  "userID1": {
-    email: "2690@qq.com",
-    password: "2690" 
+  "000000": {
+    userId: "000000",
+    email: "mht@qq.com",
+    password: "txqq" 
+  },
+  "885188": {
+    userId: "885188",
+    email: "my@ali.com",
+    password: "buyit"
   }
 };
 //Helper functions
@@ -46,6 +52,22 @@ const completeURL = (url) => {
   }
   return compltURL;
 };
+const emailExist = (email, users) => {
+  for (const userID in users) {
+    if (users[userID].email === email) {
+      return true;
+    }
+  }
+  return false;
+};
+const findUser = (userId, users) => {
+  for (const id in users) {
+    if (id === userId) {
+      return users[id];
+    }
+  }
+  return null;
+};
 
 
 
@@ -60,25 +82,28 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  const user = findUser(req.cookies.userId, usersDB);
   const templateVars = {
     urls: urlsDB,
-    username: req.cookies.username,
+    user
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  const user = findUser(req.cookies.userId, usersDB);
   const templateVars = {
-    username: req.cookies.username,
+    user,
   }
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  const user = findUser(req.cookies.userId, usersDB);
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlsDB[req.params.shortURL],
-    username: req.cookies.username,
+    user,
   };
   res.render("urls_show", templateVars);
 });
@@ -86,6 +111,22 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlsDB[req.params.shortURL];
   return res.redirect(longURL);
+});
+
+app.get("/register", (req, res) => {
+  const user = findUser(req.cookies.userId, usersDB);
+  const templateVars = {
+    user
+  };
+  return res.render("register", templateVars);
+});
+
+app.get("/login", (req, res) => {
+  const user = findUser(req.cookies.userId, usersDB);
+  const templateVars = {
+    user
+  };
+  return res.render("login", templateVars);
 });
 
 
@@ -115,8 +156,31 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  return res.clearCookie("username").redirect("urls");
+  return res.clearCookie("userId").redirect("urls");
 });
+
+app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email) {
+    return res.status(400).send("<h1>Please enter your email address to finish register!</h1>");
+  }
+  if (!password) {
+    return res.status(400).send("<h1>Please enter passowrd to finish register!</h1>");
+  }
+  if (emailExist(email)) {
+    return res.status(400).send("<h1>You already registered with this email address!</h1>");
+  }
+  const userId = generateRandomString();
+  usersDB[userId] = {
+    userId,
+    email,
+    password
+  };
+  return res.cookie("userId", userId).redirect("/urls");
+});
+
+
 
 
 
