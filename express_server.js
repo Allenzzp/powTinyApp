@@ -103,7 +103,11 @@ app.listen(PORT, () => {
 
 //Handle GET request
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const user = findUserById(req.session.userId, usersDB);
+  if (!user) {
+    return res.redirect("/login");
+  }
+  return res.redirect("/urls");
 });
 
 app.get("/urls", (req, res) => {
@@ -122,7 +126,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const user = findUserById(req.session.userId, usersDB);
   if (!user) {
-    return res.status(401).send("<h1>You need to login first!</h1>");
+    return res.redirect("/login");
   }
   const templateVars = {
     user,
@@ -163,6 +167,9 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/register", (req, res) => {
   const user = findUserById(req.session.userId, usersDB);
+  if (user) {
+    return res.redirect("/urls");
+  }
   const templateVars = {
     user
   };
@@ -171,6 +178,9 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const user = findUserById(req.session.userId, usersDB);
+  if (user) {
+    return res.redirect("/urls");
+  }
   const templateVars = {
     user
   };
