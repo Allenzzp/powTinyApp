@@ -2,14 +2,20 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
+const bcrypt = require("bcryptjs");
+const methodOverride = require("method-override");
 
 app.set("view engine", "ejs");
 
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: "session",
+  keys: ["welcome2powTinyApp", "helloWorld!"]
+}));
+app.use(methodOverride("_method"));
 
 const urlsDB = {
   "b2xVn2": {
@@ -27,12 +33,12 @@ const usersDB = {
   "000000": {
     userId: "000000",
     email: "mht@qq.com",
-    password: "txqq" 
+    password: bcrypt.hashSync("txqq", 10) 
   },
   "885188": {
     userId: "885188",
     email: "my@ali.com",
-    password: "buyit"
+    password: bcrypt.hashSync("buyit", 10)
   }
 };
 //Helper functions
@@ -101,7 +107,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+  const user = findUserById(req.session.userId, usersDB);
   if (!user) {
     return res.status(401).send("<h1>You need to login first!</h1>");
   }
@@ -114,7 +120,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+  const user = findUserById(req.session.userId, usersDB);
   if (!user) {
     return res.status(401).send("<h1>You need to login first!</h1>");
   }
@@ -125,7 +131,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+  const user = findUserById(req.session.userId, usersDB);
   const shortURL = req.params.shortURL;
   if (!user) {
     return res.status(401).send("<h1>You need to login first!</h1>");
@@ -156,7 +162,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+  const user = findUserById(req.session.userId, usersDB);
   const templateVars = {
     user
   };
@@ -164,7 +170,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+  const user = findUserById(req.session.userId, usersDB);
   const templateVars = {
     user
   };
@@ -173,7 +179,7 @@ app.get("/login", (req, res) => {
 
 //end point of create new URL obj
 app.post("/urls", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+  const user = findUserById(req.session.userId, usersDB);
   if (!user) {
     return res.status(401).send("<h1>You need to login first!</h1>");
   }
@@ -190,8 +196,8 @@ app.post("/urls", (req, res) => {
 });
 
 //end point of delete URL obj
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+app.delete("/urls/:shortURL", (req, res) => {
+  const user = findUserById(req.session.userId, usersDB);
   const shortURL = req.params.shortURL;
   if (!user) {
     return res.status(401).send("<h1>You need to login first!</h1>");
@@ -209,8 +215,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 //end point of edit longURL
-app.post("/urls/:shortURL/update", (req, res) => {
-  const user = findUserById(req.cookies.userId, usersDB);
+app.put("/urls/:shortURL", (req, res) => {
+  const user = findUserById(req.session.userId, usersDB);
   const shortURL = req.params.shortURL;
   if (!user) {
     return res.status(401).send("<h1>You need to login first!</h1>");
@@ -242,19 +248,21 @@ app.post("/login", (req, res) => {
   if (!user) {
     return res.status(403).send("<h1>We cannot find this email address, please register first!</h1>");
   }
-  if (user.password !== password) {
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("<h1>Wrong password!</h1>");
   }
-  return res.cookie("userId", user.userId).redirect("/urls");
+  req.session.userId = user.userId;
+  return res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  return res.clearCookie("userId").redirect("urls");
+  req.session.userId = null;
+  return res.redirect("urls");
 });
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
-  const password = req.body.password;
+  const password = bcrypt.hashSync(req.body.password, 10);
   if (!email) {
     return res.status(400).send("<h1>Please enter your email address to finish register!</h1>");
   }
@@ -270,7 +278,8 @@ app.post("/register", (req, res) => {
     email,
     password
   };
-  return res.cookie("userId", userId).redirect("/urls");
+  req.session.userId = userId;
+  return res.redirect("/urls");
 });
 
 
