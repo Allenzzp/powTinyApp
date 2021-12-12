@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+app.set("view engine", "ejs");
+
 const urlsDB = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -9,7 +11,7 @@ const urlsDB = {
 const usersDB = {
   "userID1": {
     email: "2690@qq.com",
-    password: "2690"
+    password: "2690" 
   }
 };
 
@@ -20,6 +22,14 @@ app.listen(PORT, () => {
 //Handle GET request
 app.get("/", (req, res) => {
   res.send("Hello!");
+});
+
+app.get("/urls", (req, res) => {
+  const templateVars = {
+    urls: urlsDB
+  };
+
+  res.render("urls_index", templateVars);
 });
 
 app.get("/hello", (req, res) => {
