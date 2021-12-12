@@ -8,5 +8,6 @@ Refacotor tinyApp project and add features
 
 ## App Structure
 
-- urls_index/ display all URLs and shortened forms
+- /urls display all URLs and shortened forms
+- /urls/:shortURL displays a single URL and its shortened form
 - 
