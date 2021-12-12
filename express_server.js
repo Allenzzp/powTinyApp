@@ -94,6 +94,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   return res.redirect("/urls");
 });
 
+app.post("/urls/:shortURL/update", (req, res) => {
+  const newLongURL = completeURL(req.body.longURL);
+  const shortURL = req.params.shortURL;
+  urlsDB[shortURL] = newLongURL;
+  return res.redirect("/urls");
+});
+
 
 
 
