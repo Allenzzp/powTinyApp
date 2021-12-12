@@ -12,8 +12,16 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 
 const urlsDB = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userId: "000000",
+    createdDate: "2021/12/12"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userId: "885188",
+    createdDate: "2021/12/23"
+  }
 };
 const usersDB = {
   "000000": {
@@ -67,6 +75,11 @@ const findUserById = (userId, users) => {
   }
   return null;
 };
+const getTimeStamp = () => {
+  const date = new Date();
+  const [month, day, year]       = [date.getMonth(), date.getDate(), date.getFullYear()];
+  return ` ${year}/${month}/${day}`;
+};
 
 
 
@@ -91,6 +104,9 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user = findUserById(req.cookies.userId, usersDB);
+  if (!user) {
+    return res.status(401).send("<h1>You need to login in first!</h1>");
+  }
   const templateVars = {
     user,
   }
@@ -101,14 +117,19 @@ app.get("/urls/:shortURL", (req, res) => {
   const user = findUserById(req.cookies.userId, usersDB);
   const templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlsDB[req.params.shortURL],
+    longURL: urlsDB[req.params.shortURL].longURL,
+    createdDate: urlsDB[req.params.shortURL].createdDate,
     user,
   };
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlsDB[req.params.shortURL];
+  const urlObj = urlsDB[req.params.shortURL];
+  if (!urlObj) {
+    return res.status(404).send("<h1>Page Not found!</h1>");
+  }
+  const longURL = urlObj.longURL;
   return res.redirect(longURL);
 });
 
@@ -130,9 +151,19 @@ app.get("/login", (req, res) => {
 
 
 app.post("/urls", (req, res) => {
+  const user = findUserById(req.cookies.userId, usersDB);
+  if (!user) {
+    return res.status(401).send("<h1>You need to log in first</h1>");
+  }
   const longURL = completeURL(req.body.longURL);
   const shortURL = generateRandomString();
-  urlsDB[shortURL] = longURL;
+  const createdDate = getTimeStamp();
+  const userId = user.userId;
+  urlsDB[shortURL] = {
+    longURL,
+    createdDate,
+    userId
+  };
   return res.redirect(`/urls/${shortURL}`);
 });
 
