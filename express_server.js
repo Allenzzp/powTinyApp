@@ -3,7 +3,6 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const { use } = require("express/lib/application");
 
 app.set("view engine", "ejs");
 
@@ -52,10 +51,10 @@ const completeURL = (url) => {
   }
   return compltURL;
 };
-const emailExist = (email, users) => {
-  for (const userID in users) {
-    if (users[userID].email === email) {
-      return true;
+const findUserByemail = (email, users) => {
+  for (const id in users) {
+    if (users[id].email === email) {
+      return users[id];
     }
   }
   return false;
@@ -151,8 +150,22 @@ app.post("/urls/:shortURL/update", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  return res.cookie("username", username).redirect("/urls");
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email) {
+    return res.status(400).send("<h1>Please enter your email address to login!</h1>");
+  }
+  if (!password) {
+    return res.status(400).send("<h1>Please enter passowrd to login!</h1>");
+  }
+  const user = findUserByemail(email, usersDB);
+  if (!user) {
+    return res.status(403).send("<h1>We cannot find this email address, please register first!</h1>");
+  }
+  if (user.password !== password) {
+    return res.status(403).send("<h1>Wrong password!</h1>");
+  }
+  return res.cookie("userId", user.userId).redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
@@ -168,7 +181,7 @@ app.post("/register", (req, res) => {
   if (!password) {
     return res.status(400).send("<h1>Please enter passowrd to finish register!</h1>");
   }
-  if (emailExist(email)) {
+  if (findUserByemail(email, usersDB)) {
     return res.status(400).send("<h1>You already registered with this email address!</h1>");
   }
   const userId = generateRandomString();
