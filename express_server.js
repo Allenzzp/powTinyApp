@@ -59,7 +59,7 @@ const findUserByemail = (email, users) => {
   }
   return false;
 };
-const findUser = (userId, users) => {
+const findUserById = (userId, users) => {
   for (const id in users) {
     if (id === userId) {
       return users[id];
@@ -81,7 +81,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const user = findUser(req.cookies.userId, usersDB);
+  const user = findUserById(req.cookies.userId, usersDB);
   const templateVars = {
     urls: urlsDB,
     user
@@ -90,7 +90,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = findUser(req.cookies.userId, usersDB);
+  const user = findUserById(req.cookies.userId, usersDB);
   const templateVars = {
     user,
   }
@@ -98,7 +98,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const user = findUser(req.cookies.userId, usersDB);
+  const user = findUserById(req.cookies.userId, usersDB);
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlsDB[req.params.shortURL],
@@ -113,7 +113,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const user = findUser(req.cookies.userId, usersDB);
+  const user = findUserById(req.cookies.userId, usersDB);
   const templateVars = {
     user
   };
@@ -121,7 +121,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const user = findUser(req.cookies.userId, usersDB);
+  const user = findUserById(req.cookies.userId, usersDB);
   const templateVars = {
     user
   };

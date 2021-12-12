@@ -5,8 +5,8 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
+      <div class="navbar-nav" style="font-size: 20px">
+        <a class="nav-item nav-link" href="/urls" >My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
@@ -23,7 +23,7 @@
         </form>
       </div>
     <% } else { %>
-      <p class="navbar-brand" style="margin: auot 1em">Logged In As: <%= user.email %>!</p>
+      <p class="navbar-brand" style="margin: 10px">Logged In As: <%= user.email %>!</p>
       <form action="/logout" method="POST" class="form-inline">
         <button class="btn btn-primary">Logout</button>
       </form>
