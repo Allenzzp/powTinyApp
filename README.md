@@ -32,5 +32,18 @@ Routes are ordered from most specific to least specific
 
 - POST /urls/:shortURL/update --- update a new long URL and redirect to /urls
 
+## Permission
+- Login then redirect to /urls
+- Users can only see own shortened URLs
+- Users can only edit or delete own URLs
+- Only registered users can shorten URLs
+- URLs belong to users (in /urls, only display URLs created by this user)
+- Anyone can visit an existed short URLs through GET /u/:shortURL
+- Security for edit/delete URL:
+  - check Login staus
+  - check shortURL exist or not
+  - check does the user own this URL
+  - implement task
+
   
 

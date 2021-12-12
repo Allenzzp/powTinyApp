@@ -20,7 +20,7 @@ const urlsDB = {
   "9sm5xK": {
     longURL: "http://www.google.com",
     userId: "885188",
-    createdDate: "2021/12/23"
+    createdDate: "2021/12/23" 
   }
 };
 const usersDB = {
@@ -80,8 +80,15 @@ const getTimeStamp = () => {
   const [month, day, year]       = [date.getMonth(), date.getDate(), date.getFullYear()];
   return ` ${year}/${month}/${day}`;
 };
-
-
+const urlsForUser = (id, urls) => {
+  const filteredUrls = {};
+  for (const shortURL in urls) {
+    if (urls[shortURL].userId === id) {
+      filteredUrls[shortURL] = urls[shortURL];
+    }
+  }
+  return filteredUrls;
+};
 
 
 app.listen(PORT, () => {
@@ -95,8 +102,12 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = findUserById(req.cookies.userId, usersDB);
+  if (!user) {
+    return res.status(401).send("<h1>You need to login first!</h1>");
+  }
+  const userURLs = urlsForUser(user.userId, urlsDB);
   const templateVars = {
-    urls: urlsDB,
+    urls: userURLs,
     user
   };
   res.render("urls_index", templateVars);
@@ -105,7 +116,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const user = findUserById(req.cookies.userId, usersDB);
   if (!user) {
-    return res.status(401).send("<h1>You need to login in first!</h1>");
+    return res.status(401).send("<h1>You need to login first!</h1>");
   }
   const templateVars = {
     user,
@@ -115,10 +126,21 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const user = findUserById(req.cookies.userId, usersDB);
+  const shortURL = req.params.shortURL;
+  if (!user) {
+    return res.status(401).send("<h1>You need to login first!</h1>");
+  }
+  const urlObj = urlsDB[shortURL];
+  if (!urlObj) {
+    return res.status(404).send("<h1>Page Not found!</h1>");
+  }
+  if (urlsDB[shortURL].userId !== user.userId) {
+    return res.status(403).send("<h1>You cannot see others' URLs!</h1>");
+  }
   const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlsDB[req.params.shortURL].longURL,
-    createdDate: urlsDB[req.params.shortURL].createdDate,
+    shortURL,
+    longURL: urlsDB[shortURL].longURL,
+    createdDate: urlsDB[shortURL].createdDate,
     user,
   };
   res.render("urls_show", templateVars);
@@ -149,11 +171,11 @@ app.get("/login", (req, res) => {
   return res.render("login", templateVars);
 });
 
-
+//end point of create new URL obj
 app.post("/urls", (req, res) => {
   const user = findUserById(req.cookies.userId, usersDB);
   if (!user) {
-    return res.status(401).send("<h1>You need to log in first</h1>");
+    return res.status(401).send("<h1>You need to login first!</h1>");
   }
   const longURL = completeURL(req.body.longURL);
   const shortURL = generateRandomString();
@@ -167,16 +189,43 @@ app.post("/urls", (req, res) => {
   return res.redirect(`/urls/${shortURL}`);
 });
 
+//end point of delete URL obj
 app.post("/urls/:shortURL/delete", (req, res) => {
+  const user = findUserById(req.cookies.userId, usersDB);
   const shortURL = req.params.shortURL;
+  if (!user) {
+    return res.status(401).send("<h1>You need to login first!</h1>");
+  }
+  const urlObj = urlsDB[shortURL];
+
+  if (!urlObj) {
+    return res.status(404).send("<h1>Page Not found!</h1>");
+  }
+  if (urlsDB[shortURL].userId !== user.userId) {
+    return res.status(403).send("<h1>You cannot delete others' URLs!</h1>");
+  }
   delete urlsDB[shortURL];
   return res.redirect("/urls");
 });
 
+//end point of edit longURL
 app.post("/urls/:shortURL/update", (req, res) => {
-  const newLongURL = completeURL(req.body.longURL);
+  const user = findUserById(req.cookies.userId, usersDB);
   const shortURL = req.params.shortURL;
-  urlsDB[shortURL] = newLongURL;
+  if (!user) {
+    return res.status(401).send("<h1>You need to login first!</h1>");
+  }
+
+  const urlObj = urlsDB[shortURL];
+
+  if (!urlObj) {
+    return res.status(404).send("<h1>Page Not found!</h1>");
+  }
+  if (urlsDB[shortURL].userId !== user.userId) {
+    return res.status(403).send("<h1>You cannot edit others' URLs!</h1>");
+  }
+  const newLongURL = completeURL(req.body.longURL);
+  urlsDB[shortURL].longURL = newLongURL;
   return res.redirect("/urls");
 });
 
