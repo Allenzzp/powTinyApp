@@ -16,4 +16,7 @@ Routes are ordered from most specific to least specific
 - urls_new.ejs submit button --- send post request to /urls
 - POST /urls --- create a new short/long URL pair --- redirect to urls/:shortURL
 - GET /u/:shortURL --- redirect to corresponding longURL
+- urls_index.ejs delete button --- send post request to /urls/:shortURL/delete
+- POST /urls/:shortURL/delete --- delete corresponding short/long URL pair and redirect to /urls
+- 
 

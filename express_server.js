@@ -80,12 +80,34 @@ app.get("/u/:shortURL", (req, res) => {
   return res.redirect(longURL);
 });
 
+
 app.post("/urls", (req, res) => {
   const longURL = completeURL(req.body.longURL);
   const shortURL = generateRandomString();
   urlsDB[shortURL] = longURL;
   return res.redirect(`/urls/${shortURL}`);
 });
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL;
+  delete urlsDB[shortURL];
+  return res.redirect("/urls");
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 app.get("/hello", (req, res) => {
