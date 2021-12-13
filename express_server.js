@@ -21,12 +21,18 @@ const urlsDB = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
     userId: "000000",
-    createdDate: "2021/12/12"
+    createdDate: "2021/12/12",
+    visits: 0,
+    records: [],
+    uniqueVisits: 0
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
     userId: "885188",
-    createdDate: "2021/12/23" 
+    createdDate: "2021/12/23",
+    visits: 0,
+    uniqueVisits: 0,
+    records: []
   }
 };
 const usersDB = {
@@ -139,6 +145,9 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL,
     longURL: urlsDB[shortURL].longURL,
     createdDate: urlsDB[shortURL].createdDate,
+    visits: urlsDB[shortURL].visits,
+    uniqueVisits: urlsDB[shortURL].uniqueVisits,
+    records: urlsDB[shortURL].records,
     user,
   };
   res.render("urls_show", templateVars);
@@ -150,6 +159,14 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send("<h1>Page Not found!</h1>");
   }
   const longURL = urlObj.longURL;
+  urlObj.visits += 1;
+  
+  if (!req.session.visitorId) {
+    const visitorId = generateRandomString();
+    req.session.visitorId = visitorId;
+    urlObj.uniqueVisits += 1;
+  }
+  urlObj.records.push(`visitId: ${req.session.visitorId} visited at${getTimeStamp()}`);
   return res.redirect(longURL);
 });
 
@@ -188,7 +205,10 @@ app.post("/urls", (req, res) => {
   urlsDB[shortURL] = {
     longURL,
     createdDate,
-    userId
+    userId,
+    visits: 0,
+    uniqueVisits: 0,
+    records: [],
   };
   return res.redirect(`/urls/${shortURL}`);
 });
