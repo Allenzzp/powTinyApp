@@ -23,15 +23,15 @@ const urlsDB = {
     userId: "000000",
     createdDate: "2021/12/12",
     visits: 0,
-    records: [],
-    uniqueVisits: 0
+    uniqueVisitors: [],
+    records: []
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
     userId: "885188",
     createdDate: "2021/12/23",
     visits: 0,
-    uniqueVisits: 0,
+    uniqueVisitors: [],
     records: []
   }
 };
@@ -81,8 +81,8 @@ const findUserByemail = (email, users) => {
 };
 const getTimeStamp = () => {
   const date = new Date();
-  const [month, day, year]       = [date.getMonth(), date.getDate(), date.getFullYear()];
-  return ` ${year}/${month}/${day}`;
+  const [month, day, year] = [date.getMonth(), date.getDate(), date.getFullYear()];
+  return `${year}/${month}/${day}`;
 };
 const urlsForUser = (id, urls) => {
   const filteredUrls = {};
@@ -146,7 +146,7 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlsDB[shortURL].longURL,
     createdDate: urlsDB[shortURL].createdDate,
     visits: urlsDB[shortURL].visits,
-    uniqueVisits: urlsDB[shortURL].uniqueVisits,
+    uniqueVisitors: urlsDB[shortURL].uniqueVisitors.length,
     records: urlsDB[shortURL].records,
     user,
   };
@@ -160,13 +160,18 @@ app.get("/u/:shortURL", (req, res) => {
   }
   const longURL = urlObj.longURL;
   urlObj.visits += 1;
-  
-  if (!req.session.visitorId) {
-    const visitorId = generateRandomString();
-    req.session.visitorId = visitorId;
-    urlObj.uniqueVisits += 1;
+
+  const visitId = req.session.visitId;
+  if (!visitId) { //visitor has no cookie 
+    const visitId = generateRandomString();
+    req.session.visitId = visitId;
+    urlObj.uniqueVisitors.push(visitId);
+  } else {
+    if (urlObj.uniqueVisitors.indexOf(visitId) < 0) { //visitor has Id but never visit this shortURL b4
+      urlObj.uniqueVisitors.push(visitId);
+    }
   }
-  urlObj.records.push(`visitId: ${req.session.visitorId} visited at${getTimeStamp()}`);
+  urlObj.records.push(`visitId: ${req.session.visitId} visited at${getTimeStamp()}`);
   return res.redirect(longURL);
 });
 
@@ -182,7 +187,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const user = usersDB[req.session.userId, usersDB];
+  const user = usersDB[req.session.userId];
   if (user) {
     return res.redirect("/urls");
   }
@@ -207,7 +212,7 @@ app.post("/urls", (req, res) => {
     createdDate,
     userId,
     visits: 0,
-    uniqueVisits: 0,
+    uniqueVisitors: [],
     records: [],
   };
   return res.redirect(`/urls/${shortURL}`);
@@ -299,23 +304,6 @@ app.post("/register", (req, res) => {
   req.session.userId = userId;
   return res.redirect("/urls");
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>");

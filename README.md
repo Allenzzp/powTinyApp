@@ -45,5 +45,15 @@ Routes are ordered from most specific to least specific
   - check does the user own this URL
   - implement task
 
+## Unique Visitors
+- current cookie session --> userId determines whether login or not
+- for each shortURL, holds a unique visitors' array[] 
+- save another cookie session --> visitId
+- LOGIC: 
+  - if a visitor has visitId, then check is Id in unique visitors' array[]
+    - if yes, do nothing; else, add into array
+  - if a viitor has no visitId, generated a new one for him/her
+    - add into array
+
   
 
